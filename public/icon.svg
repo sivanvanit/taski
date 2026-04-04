@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#7c3aed"/>
+  <!-- Calendar body -->
+  <rect x="80" y="152" width="352" height="296" rx="32" fill="white" opacity="0.97"/>
+  <!-- Header bar -->
+  <rect x="80" y="152" width="352" height="96" rx="32" fill="#5b21b6"/>
+  <rect x="80" y="216" width="352" height="32" fill="#5b21b6"/>
+  <!-- Binding rings -->
+  <rect x="160" y="92" width="40" height="84" rx="20" fill="rgba(255,255,255,0.9)"/>
+  <rect x="312" y="92" width="40" height="84" rx="20" fill="rgba(255,255,255,0.9)"/>
+  <!-- Day dots row 1 -->
+  <circle cx="168" cy="316" r="22" fill="#7c3aed" opacity="0.7"/>
+  <circle cx="256" cy="316" r="22" fill="#7c3aed" opacity="0.7"/>
+  <circle cx="344" cy="316" r="22" fill="#7c3aed" opacity="0.7"/>
+  <!-- Day dots row 2 -->
+  <circle cx="168" cy="384" r="22" fill="#7c3aed" opacity="0.7"/>
+  <circle cx="256" cy="384" r="22" fill="#c4b5fd"/>
+  <circle cx="344" cy="384" r="22" fill="#7c3aed" opacity="0.4"/>
+</svg>

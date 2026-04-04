@@ -1,0 +1,237 @@
+@import "tailwindcss";
+
+* { box-sizing: border-box; font-family: 'Heebo', system-ui, sans-serif; }
+html { overflow-x: hidden; }
+
+/* ─── Theme variables ────────────────────────────────────────────────────────── */
+:root {
+  --app-bg: linear-gradient(135deg, #faf5ff, #fdf2f8, #f0f9ff);
+  --header-gradient: linear-gradient(to right, #c4b5fd, #f9a8d4, #7dd3fc);
+  --btn-gradient: linear-gradient(to bottom, #a78bfa, #7c3aed);
+  --btn-loading-color: #c4b5fd;
+  --focus-border: #a78bfa;
+  --focus-ring: rgba(167, 139, 250, 0.15);
+  --blob1: rgba(196, 181, 253, 0.4);
+  --blob2: rgba(125, 211, 252, 0.35);
+  --blob3: rgba(249, 168, 212, 0.25);
+  --cell-border: #f0f0f0;
+  --cell-bg: #ffffff;
+  --footer-bg: rgba(250, 245, 255, 0.95);
+  /* Improved contrast: text-slate-400 → #667489 instead of default #94a3b8 */
+  --color-slate-400: #667489;
+}
+
+/* ─── Happy Skin overrides ───────────────────────────────────────────────────── */
+[data-theme="happy"] {
+  --app-bg: #ffffff;
+  --footer-bg: rgba(255, 255, 255, 0.95);
+  --header-gradient: linear-gradient(to right, #E879F9, #C026D3, #0EA5E9);
+  --btn-gradient: linear-gradient(to bottom, #E879F9, #C026D3);
+  --btn-loading-color: #F5D0FE;
+  --focus-border: #E879F9;
+  --focus-ring: rgba(232, 121, 249, 0.15);
+  --blob1: rgba(232, 121, 249, 0.35);
+  --blob2: rgba(14, 165, 233, 0.35);
+  --blob3: rgba(192, 38, 211, 0.25);
+  --cell-border: #f0e0ff;
+
+  /* Override Tailwind's purple → fuchsia so all purple Tailwind classes switch */
+  --color-purple-50:  #FDF4FF;
+  --color-purple-100: #FAE8FF;
+  --color-purple-200: #F5D0FE;
+  --color-purple-300: #F0ABFC;
+  --color-purple-400: #E879F9;
+  --color-purple-500: #D946EF;
+  --color-purple-600: #C026D3;
+  --color-purple-700: #A21CAF;
+  --color-purple-800: #86198F;
+  --color-purple-900: #701A75;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: var(--app-bg);
+  min-height: 100vh;
+}
+
+/* ─── Night Mode ─────────────────────────────────────────────────────────────── */
+[data-theme="night"] {
+  --app-bg: #0A0E17;
+  --footer-bg: rgba(10, 14, 23, 0.97);
+  --header-gradient: linear-gradient(to right, #FF8C00, #e05c00, #FF6B00);
+  --btn-gradient: linear-gradient(to bottom, #FF8C00, #cc6600);
+  --btn-loading-color: rgba(255, 140, 0, 0.4);
+  --focus-border: #FF8C00;
+  --focus-ring: rgba(255, 140, 0, 0.2);
+  --blob1: rgba(255, 140, 0, 0.15);
+  --blob2: rgba(10, 20, 50, 0.6);
+  --blob3: rgba(255, 80, 0, 0.1);
+  --cell-border: rgba(255, 140, 0, 0.45);
+  --cell-bg: #141B2D;
+
+  /* Slate scale → dark equivalents (affects all text-slate-* and bg-slate-* classes) */
+  --color-slate-50:  #1a2235;
+  --color-slate-100: #1F2937;
+  --color-slate-200: #374151;
+  --color-slate-300: #4B5563;
+  --color-slate-400: #6B7280;
+  --color-slate-500: #9CA3AF;
+  --color-slate-600: #D1D5DB;
+  --color-slate-700: #E5E7EB;
+  --color-slate-800: #F3F4F6;
+  --color-slate-900: #F9FAFB;
+}
+
+[data-theme="night"] body { background: #0A0E17; }
+
+[data-theme="night"] .sidebar-inner {
+  background: #111827;
+  border-color: rgba(255, 140, 0, 0.2);
+}
+
+/* Modals get dark charcoal bg + subtle amber border */
+[data-theme="night"] .modal-card {
+  background: #1F2937;
+  border: 1px solid rgba(255, 140, 0, 0.2);
+}
+
+/* Calendar: non-today cells */
+[data-theme="night"] .cal-cell { background: #141B2D; }
+
+/* Calendar: today cell */
+[data-theme="night"] .cal-cell-today {
+  background: #1e2f50;
+  border-color: #FF8C00;
+}
+
+/* Inputs */
+[data-theme="night"] .input-field {
+  background: #111827;
+  border-color: #374151;
+  color: #F9FAFB;
+}
+[data-theme="night"] .input-field::placeholder { color: #6B7280; }
+
+/* Task rows */
+[data-theme="night"] .task-row { background: #1F2937; }
+[data-theme="night"] .task-row:hover {
+  background: #253041;
+  border-color: rgba(255, 140, 0, 0.25);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* Header */
+[data-theme="night"] header {
+  background: rgba(10, 14, 23, 0.97);
+  border-color: rgba(255, 140, 0, 0.15);
+}
+/* All icon buttons in header become light */
+[data-theme="night"] header button,
+[data-theme="night"] header a { color: #F3F4F6; }
+[data-theme="night"] header .text-purple-400 { color: #F3F4F6; }
+[data-theme="night"] header .text-slate-500 { color: #D1D5DB; }
+[data-theme="night"] header h1 { color: #F9FAFB; }
+
+/* Sidebar toggle stays purple in night mode */
+[data-theme="night"] header .sidebar-toggle-btn {
+  color: #a78bfa !important;
+  background: rgba(139, 92, 246, 0.15) !important;
+}
+
+/* Footer */
+[data-theme="night"] footer { border-color: rgba(255, 140, 0, 0.1); }
+
+/* Today panel */
+[data-theme="night"] .today-panel { border-color: rgba(255, 140, 0, 0.15); }
+
+/* Hide footer behind open modals */
+body.modal-open footer { display: none; }
+
+/* ─── Sidebar panel ──────────────────────────────────────────────────────────── */
+.sidebar-inner {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: #f3e8ff;
+}
+[data-theme="happy"] .sidebar-inner {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: #e9d5ff;
+}
+
+/* ─── Input fields ───────────────────────────────────────────────────────────── */
+.input-field {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  font-size: 16px; /* prevents iOS auto-zoom */
+  outline: none;
+  background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: right;
+  color: #1e293b;
+}
+.input-field::placeholder { color: #64748b; }
+.input-field:focus {
+  border-color: var(--focus-border);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ─── Task rows ──────────────────────────────────────────────────────────────── */
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.task-row:hover {
+  background: #fff;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* ─── Calendar cells ─────────────────────────────────────────────────────────── */
+.cal-cell {
+  border: 1px solid var(--cell-border);
+  background: var(--cell-bg);
+}
+.cal-cell-today {
+  border-color: transparent;
+}
+
+/* ─── Scrollbar hide ─────────────────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Modal animations ───────────────────────────────────────────────────────── */
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+.modal-overlay {
+  animation: overlayFadeIn 0.18s ease;
+  transform: translateZ(0); /* force GPU compositing — prevents keyboard jump on iOS */
+  -webkit-transform: translateZ(0);
+}
+.modal-card {
+  animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Body scroll lock when modal is open ────────────────────────────────────── */
+body.modal-open {
+  overflow: hidden;
+  /* iOS Safari: prevents background from scrolling */
+  touch-action: none;
+}
