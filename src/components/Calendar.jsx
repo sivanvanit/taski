@@ -6,24 +6,31 @@ export default function Calendar() {
   const { 
     curYear, curMonth, tasksFor, isToday, dateStr, getProject, 
     setDailyView, setTaskDetailId, setEditMode, setAddTaskModal, 
-    tasks, setTasks, updateTask // הוספנו את updateTask מה-context
+    tasks, setTasks, updateTask 
   } = useApp();
 
   const fd  = firstDay(curYear, curMonth);
   const dim = daysInMonth(curYear, curMonth);
 
   const handleTaskDrop = async (taskId, newDay) => {
-    const newDate = dateStr(newDay);
+    // מניעת באג שבו מנסים לגרור משהו שהוא לא משימה
+    if (!taskId) return; 
     
-    // 1. עדכון אופטימי ב-UI
+    const newDate = dateStr(newDay);
+    console.log(`Dropping task ${taskId} to date ${newDate}`); // לצורכי דיבאג
+    
+    // 1. עדכון אופטימי ב-UI - שינוי מיידי
     const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, date: newDate } : t);
     setTasks(updatedTasks);
 
     // 2. עדכון ב-Supabase דרך הפונקציה הקיימת ב-App
     try {
       await updateTask(taskId, { date: newDate });
+      console.log("Supabase updated successfully");
     } catch (error) {
-      console.error("Failed to update task:", error);
+      console.error("Failed to update task in Supabase:", error);
+      // במקרה של שגיאה אמיתית, המשימה תחזור למקומה ברענון הבא.
+      // אפשר להוסיף כאן לוגיקה שתחזיר אותה מיד, אבל זה מסבך את הקוד.
     }
   };
 
@@ -57,12 +64,19 @@ export default function Calendar() {
       return (
         <div 
           key={t.id} 
-          draggable
+          draggable // הופך את האלמנט לגריר
           onDragStart={(e) => {
-            e.dataTransfer.setData("taskId", t.id);
+            // שומרים את ה-ID של המשימה כטקסט פשוט
+            e.dataTransfer.setData("text/plain", t.id.toString());
+            // הוספת אפקט ויזואלי לגרירה (אופציונלי)
+            e.currentTarget.style.opacity = '0.5';
             e.stopPropagation();
           }}
-          className="text-xs px-1.5 py-0.5 rounded-lg font-medium truncate flex items-center gap-1 cursor-grab active:cursor-grabbing" 
+          onDragEnd={(e) => {
+            // מחזירים את האופסיטי בסיום הגרירה
+            e.currentTarget.style.opacity = '1';
+          }}
+          className="text-xs px-1.5 py-0.5 rounded-lg font-medium truncate flex items-center gap-1 cursor-grab active:cursor-grabbing transition-opacity" 
           style={style}
         >
           {done && <Check size={9} className="flex-shrink-0" />}
@@ -82,11 +96,29 @@ export default function Calendar() {
             : 'hover:border-purple-200'
           }`}
         onClick={() => openDay(day)}
-        onDragOver={(e) => e.preventDefault()}
+        // מאפשר לדפדפן לדעת שאפשר לשחרר כאן (חובה!)
+        onDragOver={(e) => {
+          e.preventDefault();
+          // הוספת אפקט ויזואלי כשלוררים מעל היום (אופציונלי)
+          e.currentTarget.classList.add('bg-purple-50');
+        }}
+        // מסיר את האפקט הויזואלי כשהגרירה יוצאת מהתא
+        onDragLeave={(e) => {
+          e.currentTarget.classList.remove('bg-purple-50');
+        }}
         onDrop={(e) => {
           e.preventDefault();
-          const taskId = e.dataTransfer.getData("taskId");
-          if (taskId) handleTaskDrop(taskId, day);
+          // מסיר את האפקט הויזואלי בשחרור
+          e.currentTarget.classList.remove('bg-purple-50');
+          
+          // קוראים את ה-ID שנשמר כטקסט פשוט
+          const taskIdRaw = e.dataTransfer.getData("text/plain");
+          // ודאי שה-taskIdRaw הוא מספר (אם ה-IDs שלך הם מספרים ב-Supabase)
+          const taskId = taskIdRaw; 
+
+          if (taskId) {
+            handleTaskDrop(taskId, day);
+          }
         }}
       >
         <div className={`text-xs font-semibold mb-1 w-6 h-6 flex items-center justify-center rounded-full
