@@ -13,25 +13,34 @@ export default function Calendar() {
   const dim = daysInMonth(curYear, curMonth);
 
   const handleTaskDrop = async (taskId, newDay) => {
-    // מניעת באג שבו מנסים לגרור משהו שהוא לא משימה
-    if (!taskId) return; 
+    // דיבאג: בדיקה אם בכלל הגענו לכאן
+    console.log("=== Drop Initiated ===");
+    console.log("Task ID received:", taskId);
+    console.log("New Day:", newDay);
+
+    if (!taskId) {
+      console.error("⛔ Error: No Task ID provided to handleTaskDrop!");
+      return; 
+    }
     
     const newDate = dateStr(newDay);
-    console.log(`Dropping task ${taskId} to date ${newDate}`); // לצורכי דיבאג
+    console.log("Target Date formatted:", newDate);
     
-    // 1. עדכון אופטימי ב-UI - שינוי מיידי
+    // 1. עדכון אופטימי ב-UI
+    console.log("Applying optimistic update to UI...");
     const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, date: newDate } : t);
     setTasks(updatedTasks);
 
-    // 2. עדכון ב-Supabase דרך הפונקציה הקיימת ב-App
+    // 2. עדכון ב-Supabase
     try {
+      console.log(`Sending update request to Supabase for task ${taskId}...`);
       await updateTask(taskId, { date: newDate });
-      console.log("Supabase updated successfully");
+      console.log("✅ Supabase updated successfully!");
     } catch (error) {
-      console.error("Failed to update task in Supabase:", error);
-      // במקרה של שגיאה אמיתית, המשימה תחזור למקומה ברענון הבא.
-      // אפשר להוסיף כאן לוגיקה שתחזיר אותה מיד, אבל זה מסבך את הקוד.
+      console.error("❌ Failed to update task in Supabase:", error);
+      // הערה: אם זה נכשל, המשימה תחזור למקומה רק ברענון הבא.
     }
+    console.log("=== Drop Completed ===");
   };
 
   function openDay(day) {
@@ -64,16 +73,22 @@ export default function Calendar() {
       return (
         <div 
           key={t.id} 
-          draggable // הופך את האלמנט לגריר
+          draggable
           onDragStart={(e) => {
-            // שומרים את ה-ID של המשימה כטקסט פשוט
+            // דיבאג: בדיקה מתי הגרירה מתחילה
+            console.log(`🔷 Drag START: Task ${t.id} (${t.title})`);
+            
+            // שומרים את ה-ID. ניסיון נוסף להשתמש בפורמט ייחודי
+            e.dataTransfer.setData("application/task-id", t.id.toString());
+            
+            // תמיכה ב-fallback לדפדפנים ישנים
             e.dataTransfer.setData("text/plain", t.id.toString());
-            // הוספת אפקט ויזואלי לגרירה (אופציונלי)
+            
             e.currentTarget.style.opacity = '0.5';
             e.stopPropagation();
           }}
           onDragEnd={(e) => {
-            // מחזירים את האופסיטי בסיום הגרירה
+            console.log(`🔶 Drag END: Task ${t.id}`);
             e.currentTarget.style.opacity = '1';
           }}
           className="text-xs px-1.5 py-0.5 rounded-lg font-medium truncate flex items-center gap-1 cursor-grab active:cursor-grabbing transition-opacity" 
@@ -96,28 +111,31 @@ export default function Calendar() {
             : 'hover:border-purple-200'
           }`}
         onClick={() => openDay(day)}
-        // מאפשר לדפדפן לדעת שאפשר לשחרר כאן (חובה!)
         onDragOver={(e) => {
           e.preventDefault();
-          // הוספת אפקט ויזואלי כשלוררים מעל היום (אופציונלי)
           e.currentTarget.classList.add('bg-purple-50');
         }}
-        // מסיר את האפקט הויזואלי כשהגרירה יוצאת מהתא
         onDragLeave={(e) => {
           e.currentTarget.classList.remove('bg-purple-50');
         }}
         onDrop={(e) => {
           e.preventDefault();
-          // מסיר את האפקט הויזואלי בשחרור
+          console.log(`🟢 Drop Event on Day ${day}`);
           e.currentTarget.classList.remove('bg-purple-50');
           
-          // קוראים את ה-ID שנשמר כטקסט פשוט
-          const taskIdRaw = e.dataTransfer.getData("text/plain");
-          // ודאי שה-taskIdRaw הוא מספר (אם ה-IDs שלך הם מספרים ב-Supabase)
-          const taskId = taskIdRaw; 
+          // ניסיון לקרוא את ה-ID משני הפורמטים
+          let taskIdRaw = e.dataTransfer.getData("application/task-id");
+          if (!taskIdRaw) {
+            console.log("Fallback: application/task-id failed, trying text/plain");
+            taskIdRaw = e.dataTransfer.getData("text/plain");
+          }
+          
+          console.log("Raw data found in Drop:", taskIdRaw);
 
-          if (taskId) {
-            handleTaskDrop(taskId, day);
+          if (taskIdRaw) {
+            handleTaskDrop(taskIdRaw, day);
+          } else {
+            console.error("⛔ Error: No task ID found in dataTransfer on drop!");
           }
         }}
       >
