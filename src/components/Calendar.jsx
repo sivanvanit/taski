@@ -15,7 +15,7 @@ export default function Calendar() {
   const fd  = firstDay(curYear, curMonth);
   const dim = daysInMonth(curYear, curMonth);
 
-  const handleTaskDrop = async (taskId: string, newDay: number) => {                             
+  const handleTaskDrop = async (taskId, newDay) => {                            
     if (!taskId) return;
     setDragOverDay(null);                                                                       
     if (typeof updateTask === 'function') {
