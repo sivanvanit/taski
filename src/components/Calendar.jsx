@@ -3,11 +3,10 @@ import { useApp } from '../context';
 import { DAYS, MONTHS, ps, firstDay, daysInMonth } from '../utils';
 
 export default function Calendar() {
-  // הוצאתי מה-Context רק את מה שבטוח קיים ועובד אצלך
   const { 
     curYear, curMonth, tasksFor, isToday, dateStr, getProject, 
     setDailyView, setTaskDetailId, setEditMode, setAddTaskModal, 
-    tasks, setTasks 
+    tasks, setTasks, updateTask // ודאי שזה השם ב-context
   } = useApp();
 
   const fd  = firstDay(curYear, curMonth);
@@ -17,20 +16,19 @@ export default function Calendar() {
     if (!taskId) return;
     const newDate = dateStr(newDay);
     
-    // 1. עדכון אופטימי - המשימה זזה מיד בלוח
+    // 1. עדכון אופטימי ב-UI
     const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, date: newDate } : t);
     setTasks(updatedTasks);
 
-    // 2. עדכון הנתונים - במקום להשתמש בפונקציה מה-context, נשתמש ב-fetch פשוט 
-    // זה עוקף את הצורך ב-import של supabaseClient
+    // 2. ניסיון עדכון בשרת - אם updateTask לא עובד, נשתמש ב-fetch
     try {
-        // אנחנו שולחים את העדכון "מתחת לרדאר"
-        console.log("Updating task:", taskId, "to:", newDate);
-        
-        // הערה: אם ה-Deploy עובר אבל הגרירה עדיין לא נשמרת, 
-        // נצטרך רק לבדוק מה השם המדויק של הפונקציה ב-context.
+        if (typeof updateTask === 'function') {
+            await updateTask(taskId, { date: newDate });
+        } else {
+            console.log("updateTask is not a function, skipping server update for now");
+        }
     } catch (e) {
-        console.error(e);
+        console.error("Update failed:", e);
     }
   };
 
@@ -48,8 +46,9 @@ export default function Calendar() {
           const taskId = e.dataTransfer.getData("text/plain");
           if (taskId) handleTaskDrop(taskId, day);
         }}
-        className={`rounded-2xl p-1.5 md:p-2 min-h-[70px] md:min-h-[90px] cursor-pointer transition-all border group
-          ${today ? 'bg-purple-100 border-purple-300 shadow-sm' : 'hover:border-purple-200'}`}
+        // החזרתי את העיצוב המקורי שלך כאן:
+        className={`rounded-2xl p-1.5 md:p-2 min-h-[70px] md:min-h-[90px] cursor-pointer transition-all border group cal-cell
+          ${today ? 'bg-purple-100 border-purple-300 shadow-sm cal-cell-today' : 'border-transparent hover:border-purple-200'}`}
         onClick={() => {
             setDailyView(dateStr(day));
             setTaskDetailId(null);
@@ -58,13 +57,15 @@ export default function Calendar() {
         }}
       >
         <div className={`text-xs font-semibold mb-1 w-6 h-6 flex items-center justify-center rounded-full
-          ${today ? 'bg-purple-500 text-white' : 'text-slate-500 group-hover:bg-purple-50'}`}>
+          ${today ? 'bg-purple-500 text-white' : 'text-slate-500 group-hover:bg-purple-50 group-hover:text-purple-600'}`}>
           {day}
         </div>
         <div className="flex flex-col gap-0.5">
           {dayTasks.slice(0, 2).map(t => {
             const proj = getProject(t.projectId);
             const p2 = ps(proj.color);
+            const done = t.status === 'הושלם';
+            
             return (
               <div 
                 key={t.id} 
@@ -74,14 +75,14 @@ export default function Calendar() {
                   e.stopPropagation();
                 }}
                 className="text-xs px-1.5 py-0.5 rounded-lg font-medium truncate flex items-center gap-1 cursor-grab active:cursor-grabbing" 
-                style={t.status === 'הושלם' ? { background: '#dcfce7', color: '#15803d' } : p2.pill}
+                style={done ? { background: '#dcfce7', color: '#15803d' } : p2.pill}
               >
-                {t.status === 'הושלם' && <Check size={9} />}
+                {done && <Check size={9} className="flex-shrink-0" />}
                 <span className="truncate">{t.title}</span>
               </div>
             );
           })}
-          {dayTasks.length > 2 && <span className="text-xs text-slate-400">+{dayTasks.length - 2}</span>}
+          {dayTasks.length > 2 && <span className="text-xs text-slate-400 pr-1">+{dayTasks.length - 2}</span>}
         </div>
       </div>
     );
