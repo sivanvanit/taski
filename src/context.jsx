@@ -224,6 +224,37 @@ export function AppProvider({ children }) {
     setTaskDetailId(null); setEditMode(false);
     await supabase.from('tasks').delete().eq('id', id);
   }
+          
+   
+  async function updateTask(id, fields) {                                                         
+    const original = tasks.find(t => t.id === id);
+    if (!original) return;                                                                        
+   
+    setTasks(ts => {                                                                              
+      const updated = ts.map(t => t.id === id ? { ...t, ...fields } : t);
+      try { localStorage.setItem('taski-tasks', JSON.stringify(updated)); } catch { /* noop */ }  
+      return updated;                                                                             
+    });                                                                                           
+                                                                                                  
+    const dbFields = {};                                                                          
+    if (fields.date      !== undefined) dbFields.date       = fields.date;
+    if (fields.title     !== undefined) dbFields.title      = fields.title;                       
+    if (fields.note      !== undefined) dbFields.note       = fields.note;                        
+    if (fields.projectId !== undefined) dbFields.project_id = fields.projectId;
+    if (fields.status    !== undefined) dbFields.status     = fields.status;                      
+    if (fields.time      !== undefined) dbFields.time       = fields.time;
+    if (fields.priority  !== undefined) dbFields.priority   = fields.priority;                    
+                                                                                                  
+    const { error } = await supabase.from('tasks').update(dbFields).eq('id', id);
+                                                                                                  
+    if (error) {                                                                                  
+      setTasks(ts => {
+        const rolled = ts.map(t => t.id === id ? original : t);                                   
+        try { localStorage.setItem('taski-tasks', JSON.stringify(rolled)); } catch { /* noop */ }
+        return rolled;                                                                            
+      });
+    }                                                                                             
+  }               
 
   async function saveEdit(id) {
     if (!editDraft.title?.trim() || !editDraft.date) return;
@@ -392,7 +423,7 @@ export function AppProvider({ children }) {
     newTask, setNewTask, newProject, setNewProject,
     googleToken, addToGoogleCalendar,
     theme, setTheme,
-    cycleStatus, setTaskStatus, deleteTask, saveEdit,
+    cycleStatus, setTaskStatus, deleteTask, updateTask, saveEdit,
     batchSetProject, batchSetDate, batchDeleteTasks,
     openAddTask, submitTask, submitProject, deleteProject, updateProject,
     dateStr, isToday, tasksFor, todayStr,
