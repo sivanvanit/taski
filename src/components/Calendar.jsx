@@ -1,34 +1,29 @@
 import { Check } from 'lucide-react';
 import { useApp } from '../context';
 import { DAYS, MONTHS, ps, firstDay, daysInMonth } from '../utils';
-import { supabase } from '../supabaseClient'; // ודאי שהנתיב הזה נכון אצלך
 
 export default function Calendar() {
   const { 
     curYear, curMonth, tasksFor, isToday, dateStr, getProject, 
-    setDailyView, setTaskDetailId, setEditMode, setAddTaskModal, tasks, setTasks 
+    setDailyView, setTaskDetailId, setEditMode, setAddTaskModal, 
+    tasks, setTasks, updateTask // הוספנו את updateTask מה-context
   } = useApp();
 
   const fd  = firstDay(curYear, curMonth);
   const dim = daysInMonth(curYear, curMonth);
 
-  // פונקציה לעדכון התאריך ב-Supabase ובסטייט המקומי
   const handleTaskDrop = async (taskId, newDay) => {
     const newDate = dateStr(newDay);
     
-    // 1. עדכון אופטימי (שינוי מיידי ב-UI)
+    // 1. עדכון אופטימי ב-UI
     const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, date: newDate } : t);
     setTasks(updatedTasks);
 
-    // 2. עדכון ב-Supabase
-    const { error } = await supabase
-      .from('tasks')
-      .update({ date: newDate })
-      .eq('id', taskId);
-
-    if (error) {
-      console.error("Error updating task date:", error);
-      // כאן אפשר להוסיף רענון של המשימות מהשרת במקרה של שגיאה
+    // 2. עדכון ב-Supabase דרך הפונקציה הקיימת ב-App
+    try {
+      await updateTask(taskId, { date: newDate });
+    } catch (error) {
+      console.error("Failed to update task:", error);
     }
   };
 
@@ -62,7 +57,7 @@ export default function Calendar() {
       return (
         <div 
           key={t.id} 
-          draggable // מאפשר גרירה
+          draggable
           onDragStart={(e) => {
             e.dataTransfer.setData("taskId", t.id);
             e.stopPropagation();
@@ -87,7 +82,6 @@ export default function Calendar() {
             : 'hover:border-purple-200'
           }`}
         onClick={() => openDay(day)}
-        // מאפשר שחרור על התא
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
